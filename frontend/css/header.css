@@ -1,0 +1,96 @@
+@CHARSET "utf-8";
+
+:root {
+	--links_position_from_the_left: 10%;
+}
+
+/* 
+ * A class representing all of the navigation bar links.
+ */
+.divHeaderNavbarDIV {
+	position: relative;
+	
+	width: 100%;
+	margin-left: 1px;
+}
+
+/* 
+ * A class representing all of the navigation bar links.
+ */
+.divHeaderNavbarLink {
+	display: inline-block;
+	float: left;
+	
+	text-align: left;
+	left: calc(var(--links_position_from_the_left) + 15px);
+	
+	font-size: 16px;
+	font-weight: bold;
+	
+	color: var(--color-inactive-navbar-links);
+	text-decoration: none;
+}
+.divHeaderNavbarLink:link {
+	color: var(--color-inactive-navbar-links);
+	text-decoration: none;
+}
+.divHeaderNavbarLink:visited {
+	color: var(--color-inactive-navbar-links);
+	text-decoration: none;
+}
+.divHeaderNavbarLink.active {
+	color: var(--color-active-navbar-links);
+	font-weight: bold;
+}
+.divHeaderNavbarLink:hover {
+	color: var(--color-active-navbar-links);
+	font-weight: bold;
+	border-bottom: 2px solid var(--color-active-navbar-links);
+}
+
+/* 
+ * A class representing all of the navigation bar link icons.
+ */
+.divHeaderNavbarLinkIcon {
+	display: inline-block;
+	float: left;
+
+	left: var(--links_position_from_the_left);
+	
+	width: 30px;
+	height: 30px;
+}
+
+/* 
+ * The DIV containing Vaultra's logo on the left side of the header.
+ */
+#divHeaderLogo {
+	position: relative;
+	
+	height: 15%;
+	width: 100%;
+	
+	padding-left: 10px;
+	padding-right: 10px;
+	
+	background-color: var(--background-logo);
+}
+
+/* 
+ * The DIV containing the page navigation bar.
+ */
+#divHeaderNavbar {
+	position: relative;
+	
+	height: 85%;
+	width: 100%;
+	
+	background-color: var(--background-navbar);
+}
+
+/* 
+ * The logo image.
+ */
+#imgVaultraLogo {
+	width: 95%;
+}

@@ -1,0 +1,11 @@
+runtime: php55
+api_version: 1
+
+handlers:
+- url: /frontend
+  static_dir: frontend
+- url: /(.*\.(ico|png|jpg|js|css|svg|html|map|otf|tpl))$
+  static_files: ./\1
+  upload: \.(ico|png|jpg|js|css|svg|html|map|otf|tpl)$
+- url: .*
+  script: /index.php
