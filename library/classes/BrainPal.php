@@ -212,9 +212,10 @@ class BrainPal {
 	 * @TODO Maybe move this to Security?
 	 */
 	private function createCSRFToken() {
+	   
 	    // Check that the token is still valid
-	    if( !empty($this->input('session', 'token_creation') &&
-	        (time() - $this->input('session', 'token_creation')) > TOKEN_KEEPALIVE) ) {
+	    if( empty($this->input('session', 'token_creation')) ||
+	        (time() - $this->input('session', 'token_creation')) > TOKEN_KEEPALIVE ) {
     		// The token needs to be refreshed, delete every previous request token for the user
     		Security::deleteToken();
     		
@@ -225,7 +226,7 @@ class BrainPal {
     		$this->input('session', 'token', $token);
     		
     		// Set the token creation time to the current time
-    		$this->input('session', 'token_creation', time());
+    		$this->input('session', 'token_creation', (string)time());
 	    }
 		
 		// Set the token in the template
@@ -239,7 +240,7 @@ class BrainPal {
 	 * @TODO Maybe move this to Security?
 	 */
 	private function checkCSRFToken() {
-		// Check if a form has been sent, and this is not a client init request
+		// Check if a form has been sent, and this is not a client init request 
 		if( $this->input('request', 'submit') &&
 		    !($this->getClass() === 'ActionsClient' && $this->getMethod() === 'init')) {
 			// It did, check the token
@@ -345,7 +346,7 @@ class BrainPal {
 		    // The parameter value specified is neither a string nor an array,
 		    // and it's also not a boolean (for the raw parameter value return),
 		    // thus not allowed to be set as an input value
-		    error( sprintf('Setting parameter values as type "%s" is not allowed!', gettype($raw_value)) );
+		    error( sprintf('Setting input parameter values as type "%s" is not allowed!', gettype($raw_value)) );
 		}
 		else {
 			// We doesn't, so check if the parameter exist

@@ -115,7 +115,7 @@ class ActionsClient extends Actions{
         $client_id = intval($this->app->input('session', 'client_id')); // The client ID
         $created = $this->app->input('post', 'timestamp'); // Exact timestamp of when the client init occurred
         $useragent = $this->app->input('server', 'HTTP_USER_AGENT'); // The client's user agent
-        $state = $this->app->input('post', 'state') || ''; // The client's state (landing page, filling form, etc.)
+        $state = $this->app->input('post', 'state'); // The client's state (landing page, filling form, etc.)
         $metadata = array( // Some metadata regarding the client's session
             'browser' => $this->app->input('post', 'client.agent.browser'),
             'browserVersion' => $this->app->input('post', 'client.agent.browserVersion'),
@@ -132,6 +132,9 @@ class ActionsClient extends Actions{
         $error = array(); // A temporary placeholder for any errors that might occur
     
         /* Validate the input */
+        // The state can be an empty string
+        $state = $state ? $state : '';
+        
         // Validate the user agent
         if( empty($useragent) ) {
             // The timestamp is not valid

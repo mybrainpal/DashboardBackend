@@ -51,7 +51,7 @@ abstract class Actions {
 	public function checkAuth() {
 	    // Get the method to execute
 	    $method = $this->app->getMethod();
-	    
+
 	    // Check if the method exists and is not NULL (it can be 'empty' as
 	    // boolean value of 'false' is considered 'empty' by PHP)
 	    if(isset($this->actions[$method]) && !is_null($this->actions[$method])) {
