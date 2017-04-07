@@ -67,8 +67,8 @@ class ActionsUser extends Actions {
 	public function login() {
 		// Check if the user is logged in
 		if( $this->app->user->authenticated ) {
-			// He is, redirect to the profile page
-			redirect('/User/Profile');
+			// He is, just return true
+			$this->app->output->setArguments(array(':success' => true));
 		}
 		else {
 			// He isn't, Check if the login form has been submitted
@@ -117,8 +117,8 @@ class ActionsUser extends Actions {
         // Destroy the user's session
         session_destroy();
 
-        // Redirect him to the login screen
-        redirect('/User/Login');
+        // Logged out successfully
+        $this->app->output->setArguments(array(':success' => true));
 	}
 	
 	/**
