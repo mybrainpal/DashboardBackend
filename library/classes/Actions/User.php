@@ -39,12 +39,12 @@ class ActionsUser extends Actions {
 	public function index() {
 		// Check if the user is logged in
 		if( $this->app->user->authenticated ) {
-			// He is! Send back the CSRF token
-		    $this->app->output->setArguments(array(':csrf_token' => $this->app->getCSRFToken()));
+			// He is! Send back the CSRF token along with the authentication flag
+		    $this->app->output->setArguments(array('auth' => true, ':csrf_token' => $this->app->getCSRFToken()));
 		}
 		else {
-		    // Redirect the user to the login page
-		    $this->app->output->setArguments(array(':redirect' => 'login.html'));
+		    // Inform the front-end the user is not authenticated
+		    $this->app->output->setArguments(array('auth' => false));
 		}
 	}
 	
