@@ -6,12 +6,9 @@ define('LIB_PATH', APP_PATH . 'library/'); // The library directory path
 define('TPL_PATH', APP_PATH . 'templates/'); // The path for the templates directory
 define('CLASS_PATH', LIB_PATH . 'classes/'); // The classes directory path, containing PHP classes only
 define('INC_PATH', LIB_PATH . 'includes/'); // The includes directory path, containing regular PHP functions
-define('FRONT_PATH', './frontend/'); // The path for everything related to the front end
-define('IMAGE_PATH', FRONT_PATH . 'images/'); // The path for the application images
 
 /* Database constants */
-define('DB_CONNECTION_NAME', 'mysql:unix_socket=/cloudsql/dashboard-161017:us-east1:sql-test;dbname=BrainPal;charset=utf8'); // The database host
-define('DB_HOST', '35.185.20.218'); // The database host
+define('DB_CONNECTION_NAME', 'mysql:unix_socket=/cloudsql/dashboard-161017:us-east1:sql-test;'); // The database host
 define('DB_USER', 'root'); // The database username
 define('DB_PASS', 'shovavim'); // The database password
 define('DB_NAME', 'BrainPal'); // The database name
@@ -24,7 +21,11 @@ define('WEB_ROOT', sprintf('%s://%s/%s', REQUEST_PROTOCOL, HOST_NAME, WEB_DIR));
 define('TPL_MAIN', 'main'); // The main template name
 define('TPL_HEAD', 'head'); // The header template name
 define('TPL_HEADER', 'header'); // The header template name
+define('TPL_FOOTER', 'footer'); // The header template name
 define('TPL_ERROR', 'error'); // The error template name
+define('FLAG_SUCCESS', ':success'); // The success flag name
+define('VAR_ERROR', ':error_msg'); // The error variable name
+define('VAR_CSRF_TOKEN', ':csrf_token'); // The CSRF token variable name
 
 /* SESSION CONSTANTS */
 define('SESSION_KEEPALIVE', 15 * 60); // The number of minutes (15) that a client's session will be kept alive

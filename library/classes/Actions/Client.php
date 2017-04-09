@@ -54,7 +54,7 @@ class ActionsClient extends Actions{
             
         // If we've reached here, everything is OK. Return the CSRF token
         $this->app->output->setArguments(array(
-            ':success' => true
+            FLAG_SUCCESS => true
         ));
     }
     

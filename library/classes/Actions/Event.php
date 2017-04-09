@@ -67,7 +67,7 @@ class ActionsEvent extends Actions{
 		
 		// Return the inserted log ID, along with the success flag
 		$this->app->output->setArguments(array(
-            ':success' => true,
+            FLAG_SUCCESS => true,
             ':event_id' => $event_id
         ));
 	}

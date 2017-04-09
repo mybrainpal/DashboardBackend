@@ -29,14 +29,20 @@ class Database {
 	 * @param string $db_pass The password for the database.
 	 * @param string $db_name The name of the database.
 	 */
-	public function __construct($db_host, $db_user, $db_pass, $db_name) {
+	public function __construct($db_connection_name, $db_user, $db_pass, $db_name) {
+	    // Add the database to the connection name
+	    $db_connection_name .= "dbname=$db_name;";
+	    
+	    // Add the default character set to the connection name
+	    $db_connection_name .= 'charset=utf8;';
+	    
 	    try {
     		// Create a new DB connection
-    		$this->dbh = new PDO ( DB_CONNECTION_NAME, $db_user, $db_pass);
+    		$this->dbh = new PDO ( $db_connection_name, $db_user, $db_pass);
 	    } catch (PDOException $e) {
 	        try {
     	        // Maybe we need to login without a password (for staging deployments)
-    	        $this->dbh = new PDO ( DB_CONNECTION_NAME, $db_user, '');
+    	        $this->dbh = new PDO ( $db_connection_name, $db_user, '');
 	        } catch (PDOException $e) {
     			// There are errors!
     			die('DB connection Error (' . $e->getMessage() . ')');

@@ -107,13 +107,15 @@ class Output {
 	 * @param boolean $json Is the request came using AJAX?
 	 */
 	public function display($json = false) {
+	    // Set the JSON content type
+	    header('Content-Type: application/json');
+	    
+	    // The output parameters array
+	    $json_parameters = array();
+	    
 		// Check for the JSON flag
 		if( $this->json === true ) {
-		    // The JSON flag been set, set the content type header
-		    header('Content-Type: application/json');
-		    
 		    // Remove any default template arguments
-		    $json_parameters = array();
 		    foreach($this->template_args as $key => $value) {
 		        // Built in template parameters start with '{'
 		        if( strpos($key, '{') !== 0 ) {
@@ -121,39 +123,22 @@ class Output {
 		            $json_parameters[trim($key, ':')] = $value;
 		        }
 		    }
-		    
-			// JSON encode the template arguments and print them
-			echo json_encode($json_parameters);
-		} elseif($json) {
-		    // The AJAX flag has been set, but without the JSON flag, meaning the response should
-		    // contain the specific template HTML only.
+		} else {
+		    // No JSON flag, meaning the response should contain the specified template HTML.
 		    $content = $this->getTemplateContents($this->template);
 		    
 		    // Replace the arguments in the template with their corresponding values
 		    $content = $this->parseArguments($content, $this->template_args);
 		    
-		    // We're sending a JSON response
-		    header('Content-Type: application/json');
-		    
-		    echo json_encode(array('content' => $content,
-		        'csrf_token' => $this->template_args['{:CSRF_TOKEN:}']));
+		    // Set the JSON parameters
+		    $json_parameters = array(
+		        'content' => $content, // The content of the template
+		        'csrf_token' => $this->template_args[VAR_CSRF_TOKEN] // The CSRF token
+		    );
 		}
-		else {
-			// It hasn't been set, Get the content of the template
-			$content = $this->getTemplateContents($this->template);
-			
-			// If the request hasn't came from AJAX, get the entire page
-			if( !$json) {
-				$content = $this->parsePage($content);
-			}
-			
-			// Replace the arguments in the template with their corresponding values
-			$content = $this->parseArguments($content, $this->template_args);
-			
-			// @TODO echo? really?
-			// Print the parsed content
-			echo $content;
-		}
+		
+		// JSON encode the arguments and print them
+		echo json_encode($json_parameters);
 	}
 	
 	/**
@@ -168,8 +153,8 @@ class Output {
 		$this->setTemplate(TPL_ERROR);
 		
 		// Set the arguments
-		$this->setArguments(array(':success' => false));
-		$this->setArguments(array(':error_msg' => $message));
+		$this->setArguments(array(FLAG_SUCCESS => false));
+		$this->setArguments(array(VAR_ERROR => $message));
         
 		// Display the template
 		$this->display($app->json);
@@ -224,24 +209,6 @@ class Output {
 		
 		// Return the content
 		return $content;
-	}
-	
-	private function parsePage($content) {
-		/* Get the main templates */
-		$main_tpl = $this->getTemplateContents(TPL_MAIN); // Get the main template
-		$head_tpl = $this->getTemplateContents(TPL_HEAD); // Get the head template
-		$header_tpl = $this->getTemplateContents(TPL_HEADER); // Get the header template
-		
-		// Join them together
-		$page_content = $this->parseArguments($main_tpl, array(
-			':head_tag'      => $head_tpl,
-			':header'        => $header_tpl,
-			':content'       => $content,
-		    ':csrf_token'    => $this->template_args['{:CSRF_TOKEN:}'],
-		), false);
-		
-		// That's it!
-		return $page_content;
 	}
 }
 

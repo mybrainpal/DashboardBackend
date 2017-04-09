@@ -39,8 +39,8 @@ class ActionsUser extends Actions {
 	public function index() {
 		// Check if the user is logged in
 		if( $this->app->user->authenticated ) {
-			// He is! Send back the CSRF token along with the authentication flag
-		    $this->app->output->setArguments(array('auth' => true, ':csrf_token' => $this->app->getCSRFToken()));
+			// He is! Send back the authentication flag
+		    $this->app->output->setArguments(array('auth' => true));
 		}
 		else {
 		    // Inform the front-end the user is not authenticated
@@ -68,7 +68,7 @@ class ActionsUser extends Actions {
 		// Check if the user is logged in
 		if( $this->app->user->authenticated ) {
 			// He is, just return true
-			$this->app->output->setArguments(array(':success' => true));
+			$this->app->output->setArguments(array(FLAG_SUCCESS => true));
 		}
 		else {
 			// He isn't, Check if the login form has been submitted
@@ -85,16 +85,16 @@ class ActionsUser extends Actions {
 						$this->app->input('session', 'username', $username);
 							
 						// Return that the login process succeeded
-						$this->app->output->setArguments(array(':success' => true));
+						$this->app->output->setArguments(array(FLAG_SUCCESS => true));
 					}
 					else {
 						// Login failed! Return with an error
-						$this->app->output->setArguments(array(':success' => false, ':error_msg' => 'Invalid credentials'));
+						error('Invalid credentials');
 					}
 				}
 				else {
 					// The username or password are an empty string
-					$this->app->output->setArguments(array(':success' => false, ':error_msg' => 'Username or password are empty'));
+					error('Username or password are empty');
 				}
 				
 				
@@ -118,7 +118,7 @@ class ActionsUser extends Actions {
         session_destroy();
 
         // Logged out successfully
-        $this->app->output->setArguments(array(':success' => true));
+        $this->app->output->setArguments(array(FLAG_SUCCESS => true));
 	}
 	
 	/**
@@ -140,16 +140,16 @@ class ActionsUser extends Actions {
 					$this->app->user->save(USER_SAVE_BASIC);
 					
 					// Return that the saving process succeeded
-					$this->app->output->setArguments(array(':success' => true));
+					$this->app->output->setArguments(array(FLAG_SUCCESS => true));
 				}
 				else {
 					// It doesn't, inform the user
-					$this->app->output->setArguments(array(':success' => false, ':error_msg' => "Passwords Doesn't match!"));
+					error("Passwords Doesn't match!");
 				}					
 			}
 			else {
 				// He hasn't, terminate with an error
-				$this->app->output->setArguments(array(':success' => false, ':error_msg' => 'Wrong password!'));
+				error('Wrong password!');
 			}
 		}
 		else {
@@ -178,7 +178,7 @@ class ActionsUser extends Actions {
 			$this->app->user->save(USER_SAVE_ADDITIONAL);
 			
 			// Return that the registration process succeeded
-			$this->app->output->setArguments(array(':success' => true));
+			$this->app->output->setArguments(array(FLAG_SUCCESS => true));
 		}
 		else {
 			// Set its arguments
@@ -206,7 +206,7 @@ class ActionsUser extends Actions {
 	        $this->app->user->create($username, $password);
 	        	
 	        // Return that the registration process succeeded
-	        $this->app->output->setArguments(array(':success' => true));
+	        $this->app->output->setArguments(array(FLAG_SUCCESS => true));
 	        	
 	    }
 	    else {

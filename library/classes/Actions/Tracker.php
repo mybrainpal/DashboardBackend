@@ -64,7 +64,7 @@ class ActionsCustomer extends Actions{
             
         // If we've reached here, everything is OK. Return the clients amount
         $this->app->output->setArguments(array(
-            ':success' => true,
+            FLAG_SUCCESS => true,
             ':total_clients' => $result[0][0],
         ));
     }

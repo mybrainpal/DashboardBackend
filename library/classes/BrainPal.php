@@ -83,7 +83,7 @@ class BrainPal {
 		$this->logger = new Logger();
 		
 		// Initialize the database
-		$this->db = new Database(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+		$this->db = new Database(DB_CONNECTION_NAME, DB_USER, DB_PASS, DB_NAME);
 		
 		// Initialize the output instance
 		$this->output = new Output();
@@ -120,8 +120,6 @@ class BrainPal {
 		// Add default template arguments
 		$this->output->setArguments(array(
 		    '{:PATH:}' => substr(WEB_ROOT, 0, -1), // absolute application web path without the ending slash
-		    '{:USER:}' => $this->user->first_name, // Logged in user
-		
 		));
 		
 		// Parse the path and set the class and method
@@ -230,7 +228,7 @@ class BrainPal {
 	    }
 		
 		// Set the token in the template
-		$this->output->setArguments(array(':csrf_token' => $this->input('session', 'token')));
+		$this->output->setArguments(array(VAR_CSRF_TOKEN => $this->input('session', 'token')));
 	}
 	
 	/**
