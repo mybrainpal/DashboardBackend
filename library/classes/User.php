@@ -250,88 +250,78 @@ class User {
 	}
 	
 	/**
-	 * Attempt to login as the requested user.
-	 * In case the login succeed, the function initializes the user automatically.
-	 * 
-	 * @param string $username The username requested.
-	 * @param string $password The password supplied by the user.
-	 * @return boolean True if the login succeed, false otherwise.
+	 * Returns this customer's trackers.
+	 *
+	 * @return array An array containing all the current customer trackers.
 	 */
-	public function login($username, $password) {
-		global $app;
-		
-		// Check the username for any dangerous characters and length
-		Security::validateUsername($username);
-
-		// Try to get the requested username from the DB
-		$result = $app->db->select('*')->from('`users`')->where('`username`=:username', array(
-		    ':username' => $username
-		))->execute();
-		
-		// If a user has returned from the database
-		if( count($result) === 1 ) {
-			// Get the user
-			$user = $result[0];
-			
-			// Check the password stored and the password entered are the same
-			if($user['password'] === sha1($username . $password . SALT)) {
-				// It does! Logged in successfully! Initialize the user...
-				$this->loadBasicInformation($username);
-				
-				// Update the user last login
-				$app->db->update('`users`')->set('`last_login` = now()')->where('`username` = :username', array(
-				    ':username' => $username
-				))->execute();
-				
-				// Done!
-				return true;
-			}
-		}
-		
-		// If we've reached here the user has supplied the wrong credentials
-		return false;
+	public function getTrackers() {
+	    global $app;
+	    
+	    // Make sure the tracker ID is a valid number
+	    if($this->id <= 0) {
+	        // It isn't, throw an exception
+	        error('Invalid user ID at User::getTrackers()!');
+	    }
+	    
+	    // The result array
+	    $trackers = array();
+	    
+	    // Get all the tracker IDs
+	    $result = $app->db->select('id, name')->from('`trackers`')->where(
+	        '`user_id` = :user_id', array(
+	        ':user_id' => $this->id,
+	    ))->execute();
+	    
+	    // Loop through the trackers
+	    foreach($result as $row) {
+	        // Store the tracker ID as the index, and its name as the value
+	        $trackers[intval($row['id'])] = $row['name'];
+	    }
+	
+	    // Return the trackers
+	    return $trackers;
 	}
 	
-
 	/**
-	 * Try to create a new user.
-	 * If the function fails it prints an error, otherwise it returns the email validation token.
+	 * Returns the clients information for the loaded user trackers.
 	 * 
-	 * @param string $username The username entered.
-	 * @param string $password The password entered.
-	 * @param boolean $validate_email Controls whether or not we validate the email address
-	 * @return string The email validation token
+	 * @param bool $data Optional. Should the function return the clients data or just their amount?
+	 * @param int $days Optional. The amount of days to query. Defaults to DEFAULT_QUERY_DAYS.
+	 * @param int $limit Optional. The query limit. Defaults to DEFAULT_QUERY_LIMIT.
+	 * @return array A two dimensional array containing the clients and their information.
 	 */
-	public function create($username, $password, $validate_email = true) {
-		global $app;
-		
-		// Validate the username
-		Security::validateUsername($username);
-		
-		// Encrypt his password
-		$enc_password = sha1($username . $password . SALT);
-		
-		// And insert everything to the DB
-		$app->db->insert_into('`users`')->_('(`username`, `password`)')->values('(:username, :password)', array(
-				':username' => $username,
-				':password' => $enc_password,
-		))->execute();
-		
-		// If we've passed the last query we can safely assume that we have an ID to use, so get it
-		$user_id = $app->db->lastInsertId;
-		
-		// Also add a row at the additional information table
-		$app->db->insert_into('`users_info`')->_('(`id`)')->values('(:id)', array(
-		    ':id' => $user_id
-		))->execute();
-		
-		// Now, create a new token for the email validation
-		$token = Security::createToken('email', $user_id);
-		
-		// @TODO Email the user the validation token
-		
-		// All went well, return the token
-		return $token;
+	public function getClients($data = true, $days = DEFAULT_QUERY_DAYS, $limit = DEFAULT_QUERY_LIMIT) {
+	    global $app;
+	    
+	    // Make sure the tracker ID is a valid number
+	    if($this->id <= 0) {
+	        // It isn't, throw an exception
+	        error('Invalid tracker ID at Tracker::getClients()!');
+	    }
+	    
+	    // Make sure $limit is a valid query limit
+	    $limit = intval($limit);
+	    if($limit <= 0) {
+	        // It isn't, throw an exception
+	        error('Invalid limit at Tracker::getClients()!');
+	    }
+	    
+	    // Check if we should return the data or just the clients amount
+	    $select = ($data) ? '*' : 'count(id)';
+	    
+	    // Get the trackers
+	    $trackers = $this->getTrackers();
+	    
+	    // Get all the unique clients for that tracker
+	    $result = $app->db->select($select)->from('`clients`')->where(
+	        '`tracker_id` IN :trackers AND 
+            (`created` BETWEEN DATE_SUB(NOW(), INTERVAL :days DAY) AND NOW())', array(
+                ':trackers' => array_keys($trackers),
+                ':days' => $days,
+	    ))->limit($limit)->execute();
+        
+        // Success! Return the clients information
+        return $result;
 	}
 
 	/**
@@ -400,6 +390,91 @@ class User {
 		
 		// Save the additional information of the user
 		if( type & USER_SAVE_ADDITIONAL ) $this->setAdditionalInformation();
+	}
+	
+	/**
+	 * Attempt to login as the requested user.
+	 * In case the login succeed, the function initializes the user automatically.
+	 *
+	 * @param string $username The username requested.
+	 * @param string $password The password supplied by the user.
+	 * @return boolean True if the login succeed, false otherwise.
+	 */
+	public function login($username, $password) {
+	    global $app;
+	
+	    // Check the username for any dangerous characters and length
+	    Security::validateUsername($username);
+
+	    // Try to get the requested username from the DB
+	    $result = $app->db->select('*')->from('`users`')->where('`username`=:username', array(
+	        ':username' => $username
+	    ))->execute();
+	
+	    // If a user has returned from the database
+	    if( count($result) === 1 ) {
+	        // Get the user
+	        $user = $result[0];
+	        	
+	        // Check the password stored and the password entered are the same
+	        if($user['password'] === sha1($username . $password . SALT)) {
+	            // It does! Logged in successfully! Initialize the user...
+	            $this->loadBasicInformation($username);
+	
+	            // Update the user last login
+	            $app->db->update('`users`')->set('`last_login` = now()')->where('`username` = :username', array(
+	                ':username' => $username
+	            ))->execute();
+	
+	            // Done!
+	            return true;
+	        }
+	    }
+	
+	    // If we've reached here the user has supplied the wrong credentials
+	    return false;
+	}
+	
+	
+	/**
+	 * Try to create a new user.
+	 * If the function fails it prints an error, otherwise it returns the email validation token.
+	 *
+	 * @param string $username The username entered.
+	 * @param string $password The password entered.
+	 * @param boolean $validate_email Controls whether or not we validate the email address
+	 * @return string The email validation token
+	 */
+	public function create($username, $password, $validate_email = true) {
+	    global $app;
+	
+	    // Validate the username
+	    Security::validateUsername($username);
+	
+	    // Encrypt his password
+	    $enc_password = sha1($username . $password . SALT);
+	
+	    // And insert everything to the DB
+	    $app->db->insert_into('`users`')->_('(`username`, `password`)')->values('(:username, :password)', array(
+	        ':username' => $username,
+	        ':password' => $enc_password,
+	    ))->execute();
+	
+	    // If we've passed the last query we can safely assume that we have an ID to use, so get it
+	    $user_id = $app->db->lastInsertId;
+	
+	    // Also add a row at the additional information table
+	    $app->db->insert_into('`users_info`')->_('(`id`)')->values('(:id)', array(
+	        ':id' => $user_id
+	    ))->execute();
+	
+	    // Now, create a new token for the email validation
+	    $token = Security::createToken('email', $user_id);
+	
+	    // @TODO Email the user the validation token
+	
+	    // All went well, return the token
+	    return $token;
 	}
 }
 

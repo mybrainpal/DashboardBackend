@@ -11,7 +11,10 @@ define('INC_PATH', LIB_PATH . 'includes/'); // The includes directory path, cont
 define('DB_CONNECTION_NAME', 'mysql:unix_socket=/cloudsql/dashboard-161017:us-east1:sql-test;'); // The database host
 define('DB_USER', 'root'); // The database username
 define('DB_PASS', 'shovavim'); // The database password
-define('DB_NAME', 'BrainPal'); // The database name
+define('DB_NAME', 'brainpal'); // The database name
+define('DEFAULT_QUERY_DAYS', 28); // The default amount of days for data retrieval
+define('DEFAULT_QUERY_LIMIT', 30); // The default maximum amount of rows to query
+define('DB_MAX_LIMIT', '9223372036854775807'); // The maximum number of rows a table can contain
 
 /* Output constants */
 define('REQUEST_PROTOCOL', ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) ? 'https' : 'http'); // Check the request protocol (http or https)
@@ -31,6 +34,7 @@ define('VAR_CSRF_TOKEN', ':csrf_token'); // The CSRF token variable name
 define('SESSION_KEEPALIVE', 15 * 60); // The number of minutes (15) that a client's session will be kept alive
 define('SESSION_ORIGIN', parse_url($_SERVER['HTTP_ORIGIN'], PHP_URL_HOST)); // The host from which the request came
 define('TOKEN_KEEPALIVE', 60 * 30); // The number of minutes (10) each token will be alive
+define('SESSION_STATE_CONVERTED', 'FINAL'); // The session state - indicating conversion
 
 /* Security constants */
 define('SALT', '4481c274433c22997e11eecd7de7af12');

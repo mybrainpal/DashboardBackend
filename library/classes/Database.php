@@ -158,7 +158,7 @@ class Database {
 	public function execute($raw_result = false) {
 		// Execute the query and get the result
 		$result = $this->dbh->query($this->query);
-		
+
 		// Check for errors
 		if( $result === false ) {
 		    // An error occurred! Parse the error message

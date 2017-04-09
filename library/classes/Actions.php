@@ -59,7 +59,7 @@ abstract class Actions {
 	        $this->require_auth = $this->actions[$method];
 	    } else {
 	        // It doesn't, terminate the script
-	        error('method not defined in $actions dictionary!');
+	        error('method not defined in $actions dictionary at Actions::checkAuth()');
 	    }
 	    
 	    // Check if the action requires authentication

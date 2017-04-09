@@ -16,8 +16,9 @@ class ActionsEvent extends Actions{
 	 */
 	public function add() {
 	    /* Retrieve information from the request */
-	    $client_id = intval($this->app->input('session', 'client_id')); // The client ID @TODO Set this in the session
-	    $session_id = intval($this->app->input('session', 'session_id')); // The session ID @TODO Set this in the session
+	    $client_id = intval($this->app->input('session', 'client_id')); // The client ID
+	    $session_id = intval($this->app->input('session', 'session_id')); // The session ID
+	    $tracker_id = intval($this->app->input('session', 'tracker_id')); // The session ID @TODO Set this in the session
 	    $view_id = intval($this->app->input('post', 'tracker')); // The view ID
 	    $experiment_id = intval($this->app->input('post', 'experimentId')); // The experiment ID
 	    $experiment_group_id = intval($this->app->input('post', 'experimentGroupId')); // The experiment's groups ID
@@ -47,12 +48,13 @@ class ActionsEvent extends Actions{
 		
 		/* If we've reached here, the input is valid */
 		// Store the event in the DB
-		$this->app->db->insert_into('`events`')->_('(`client_id`, `session_id`, 
+		$this->app->db->insert_into('`events`')->_('(`client_id`, `session_id`, `tracker_id`,
 		    `view_id`, `experiment_id`, `experiment_group_id`, `event`, `selector`, `metadata`, `timestamp`)')
-		->values('(:client_id, :session_id, :view_id, :experiment_id, :experiment_group_id,
+		->values('(:client_id, :session_id, :tracker_id, :view_id, :experiment_id, :experiment_group_id,
 		    :event, :selector, :metadata, :timestamp)', array(
                 ':client_id' => $client_id,
                 ':session_id' => $session_id,
+		        ':tracker_id' => $tracker_id,
                 ':view_id' => $view_id,
 		        ':experiment_id' => $experiment_id,
 		        ':experiment_group_id' => $experiment_group_id,

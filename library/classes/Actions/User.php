@@ -11,11 +11,9 @@ class ActionsUser extends Actions {
     protected $actions = array(
         'index' => false,
         'profile' => true,
-        'login' => false,
-        'logout' => true,
         'basicinfo' => true,
         'additionalinfo' => true,
-        'listusers' => true,
+        'getclientsamount' => true,
         'adduser' => true,
     );
     
@@ -59,69 +57,6 @@ class ActionsUser extends Actions {
 	}
 	
 	/**
-	 * Display the login form page for unauthenticated users,
-	 * or login the user if the login form has been submitted.
-	 * 
-	 * If the user is authenticated, redirect to the profile page.
-	 */
-	public function login() {
-		// Check if the user is logged in
-		if( $this->app->user->authenticated ) {
-			// He is, just return true
-			$this->app->output->setArguments(array(FLAG_SUCCESS => true));
-		}
-		else {
-			// He isn't, Check if the login form has been submitted
-			if( !empty($this->app->input('post')) ) {
-				// It did! process the login input
-				$username = $this->app->input('post', 'username'); // Get the username
-				$password = $this->app->input('post', 'password'); // Get the password
-				
-				// Check that we have both the username and the password
-				if( !empty($username) && !empty($password) ) {
-					// We do, send it to the user class for validation
-					if( $this->app->user->login($username, $password) ) {
-						// Logged in successfully! Set the user in the session
-						$this->app->input('session', 'username', $username);
-							
-						// Return that the login process succeeded
-						$this->app->output->setArguments(array(FLAG_SUCCESS => true));
-					}
-					else {
-						// Login failed! Return with an error
-						error('Invalid credentials');
-					}
-				}
-				else {
-					// The username or password are an empty string
-					error('Username or password are empty');
-				}
-				
-				
-			}
-			else {
-				// He isn't! Don't do anything
-				$this->app->output->setTemplate('user/login');
-				// @TODO maybe report this as an error?
-			}
-		}
-	}
-	
-	/**
-	 * Logout a logged in user.
-	 * Destroys the entire session in the process.
-	 *
-	 * If the user is not authenticated, redirect to the login page.
-	 */
-	public function logout() {
-        // Destroy the user's session
-        session_destroy();
-
-        // Logged out successfully
-        $this->app->output->setArguments(array(FLAG_SUCCESS => true));
-	}
-	
-	/**
 	 * Get/set the basic information for the current user (username and password).
 	 */
 	public function basicInfo() {
@@ -144,12 +79,12 @@ class ActionsUser extends Actions {
 				}
 				else {
 					// It doesn't, inform the user
-					error("Passwords Doesn't match!");
+					error('Passwords Doesn\'t match at User::basicInfo()');
 				}					
 			}
 			else {
 				// He hasn't, terminate with an error
-				error('Wrong password!');
+				error('Wrong password! at User::basicInfo()');
 			}
 		}
 		else {
@@ -186,33 +121,36 @@ class ActionsUser extends Actions {
 		}
 	}
 	
-	public function listUsers() {
-	    // Return the list of users
-	    // @TODO Return the users list
-	}
-	
 	/**
-	 * Display the user creation form page for administrators,
-	 * or create a new user if the registration form has been submitted.
+	 * Retrieves the amount of clients this specific user handled.
 	 */
-	public function addUser() {
-	    // Check if the registration form has been submitted
-	    if( !empty($this->app->input('post')) ) {
-	        // Process the registration input
-	        $username = $this->app->input('post', 'username'); // Get the username
-	        $password = $this->app->input('post', 'password'); // Get the password
-	        	
-	        // Create the new user and get the email validation token
-	        $this->app->user->create($username, $password);
-	        	
-	        // Return that the registration process succeeded
-	        $this->app->output->setArguments(array(FLAG_SUCCESS => true));
-	        	
+	public function getClientsAmount() {
+	    /* Retrieve information from the request */
+	    $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
+	    $error = array(); // A temporary placeholder for any errors that might occur
+	
+	    /* Validate the input */
+	    // The days parameter defaults to our days constant
+	    $days = !empty($days) ? $days : DEFAULT_QUERY_DAYS;
+	
+	    // Make sure the client is not already registered
+	    if( $days <= 0) {
+	        $error[] = 'The amount of days has to be larger than 0!';
 	    }
-	    else {
-	        // It isn't! Load the registration template
-	        $this->app->output->setTemplate('users/create');
+	
+	    // If there has been an error, send it and terminate the script
+	    if( !empty($error) ) {
+	        error($error);
 	    }
+	
+	    // Get the amount of unique clients for that user
+	    $clients = $this->app->user->getClients(false, $days, DB_MAX_LIMIT);
+	
+	    // If we've reached here, everything is OK. Return the clients amount
+	    $this->app->output->setArguments(array(
+	        FLAG_SUCCESS => true,
+	        ':total_clients' => $clients[0][0],
+	    ));
 	}
 }
 

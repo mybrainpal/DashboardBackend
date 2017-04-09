@@ -10,6 +10,7 @@ class ActionsClient extends Actions{
     
     protected $actions = array(
         'init' => false,
+        'setstate' => false,
     );
     
     /**
@@ -52,6 +53,26 @@ class ActionsClient extends Actions{
                 }
             }
             
+        // If we've reached here, everything is OK. Return the CSRF token
+        $this->app->output->setArguments(array(
+            FLAG_SUCCESS => true
+        ));
+    }
+    
+    /**
+     * Sets the client state.
+     */
+    public function setState() {
+        /* Retrieve information from the request */
+        $session_id = intval($this->app->input('session', 'session_id')); // The session ID
+        $state = $this->app->input('post', 'state'); // The tracker ID
+        
+        // Update the sessions's state
+        $this->app->db->update('`sessions`')->SET('(`state`)')
+        ->values('(:state)', array(':state' => $state))->where('`id`=:id', array(
+            ':id' => $session_id,
+        ))->execute();
+        
         // If we've reached here, everything is OK. Return the CSRF token
         $this->app->output->setArguments(array(
             FLAG_SUCCESS => true
@@ -113,9 +134,11 @@ class ActionsClient extends Actions{
     private function addSession() {
         /* Retrieve information from the request */
         $client_id = intval($this->app->input('session', 'client_id')); // The client ID
+        $tracker_id = intval($this->app->input('post', 'tracker_id')); // The tracker ID
         $created = $this->app->input('post', 'timestamp'); // Exact timestamp of when the client init occurred
         $useragent = $this->app->input('server', 'HTTP_USER_AGENT'); // The client's user agent
         $state = $this->app->input('post', 'state'); // The client's state (landing page, filling form, etc.)
+        $manipulated = intval($this->app->input('post', 'manipulated')); // Did BrainPal change this user's page?
         $metadata = array( // Some metadata regarding the client's session
             'browser' => $this->app->input('post', 'client.agent.browser'),
             'browserVersion' => $this->app->input('post', 'client.agent.browserVersion'),
@@ -154,17 +177,23 @@ class ActionsClient extends Actions{
     
         /* If we've reached here, the input is valid */
         // Store the log message in the DB
-        $this->app->db->insert_into('`sessions`')->_('(`client_id`, `useragent`, `state`, `metadata`, `created`)')
-        ->values('(:client_id, :useragent, :state, :metadata, :created)', array(
+        $this->app->db->insert_into('`sessions`')
+        ->_('(`client_id`, `tracker_id`, useragent`, `state`, `manipulated`, metadata`, `created`)')
+        ->values('(:client_id, :tracker_id, :useragent, :state, :manipulated, :metadata, :created)', array(
             ':client_id' => $client_id,
+            ':tracker_id' => $tracker_id,
             ':useragent' => $useragent,
             ':state' => $state,
+            ':manipulated' => $manipulated,
             ':metadata' => json_encode($metadata),
             ':created' => mysql_date($created),
         ))->execute();
         
         // Store the time the session was created (in seconds, not microseconds)
         $this->app->input('session', 'session_created', substr($created, 0, 10));
+        
+        // Store the tracker ID
+        $this->app->input('session', 'tracker_id', $tracker_id);
     
         // If we've passed the last query we can safely assume that we have an ID to use, so get it
         $session_id = $this->app->db->lastInsertId;

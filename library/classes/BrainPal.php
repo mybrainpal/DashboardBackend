@@ -244,7 +244,7 @@ class BrainPal {
 			// It did, check the token
 			if( $this->input('session', 'token') !== $this->input('request', 'token') ) {
 				// The token isn't valid! Raise an error but don't log it
-				error('Invalid token!', false);
+				error('Invalid CSRF token!', false);
 			}
 		}
 	}
