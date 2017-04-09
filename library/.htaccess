@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Cause a 404 response if anyone tries to access this directory
+RewriteRule ^.*$ - [R=404,L]
