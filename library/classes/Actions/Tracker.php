@@ -50,12 +50,12 @@ class ActionsTracker extends Actions{
         }
         
         // Get the amount of unique clients for that tracker
-        $clients_amount = $tracker->getClients(false, $days, DB_MAX_LIMIT);
+        $clients = $tracker->getClients(false, $days, DB_MAX_LIMIT);
             
         // If we've reached here, everything is OK. Return the clients amount
         $this->app->output->setArguments(array(
             FLAG_SUCCESS => true,
-            ':total_clients' => $clients_amount[0][0],
+            ':total_clients' => $clients[0][0],
         ));
     }
     
@@ -96,12 +96,12 @@ class ActionsTracker extends Actions{
         }
     
         // Get the amount of unique clients for that tracker
-        $clients_amount = $tracker->getConvertedClients(false, $days, DB_MAX_LIMIT);
+        $clients = $tracker->getConvertedClients(false, $days, DB_MAX_LIMIT);
     
         // If we've reached here, everything is OK. Return the clients amount
         $this->app->output->setArguments(array(
             FLAG_SUCCESS => true,
-            ':total_clients' => $clients_amount[0][0],
+            ':total_clients' => $clients[0][0],
         ));
     }
 }

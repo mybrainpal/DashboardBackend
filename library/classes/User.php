@@ -296,14 +296,14 @@ class User {
 	    // Make sure the tracker ID is a valid number
 	    if($this->id <= 0) {
 	        // It isn't, throw an exception
-	        error('Invalid tracker ID at Tracker::getClients()!');
+	        error('Invalid tracker ID at User::getClients()!');
 	    }
 	    
 	    // Make sure $limit is a valid query limit
 	    $limit = intval($limit);
 	    if($limit <= 0) {
 	        // It isn't, throw an exception
-	        error('Invalid limit at Tracker::getClients()!');
+	        error('Invalid limit at User::getClients()!');
 	    }
 	    
 	    // Check if we should return the data or just the clients amount
@@ -320,6 +320,50 @@ class User {
                 ':days' => $days,
 	    ))->limit($limit)->execute();
         
+        // Success! Return the clients information
+        return $result;
+	}
+	
+	/**
+	 * Returns the successfully converted clients information for the loaded user trackers.
+	 *
+	 * @param bool $data Optional. Should the function return the clients data or just their amount?
+	 * @param int $days Optional. The amount of days to query. Defaults to DEFAULT_QUERY_DAYS.
+	 * @param int $limit Optional. The query limit. Defaults to DEFAULT_QUERY_LIMIT.
+	 * @return array A two dimensional array containing the clients and their information.
+	 */
+	public function getConvertedClients($data = true, $days = DEFAULT_QUERY_DAYS, $limit = DEFAULT_QUERY_LIMIT) {
+	    global $app;
+	     
+	    // Make sure the tracker ID is a valid number
+	    if($this->id <= 0) {
+	        // It isn't, throw an exception
+	        error('Invalid tracker ID at User::getClients()!');
+	    }
+	     
+	    // Make sure $limit is a valid query limit
+	    $limit = intval($limit);
+	    if($limit <= 0) {
+	        // It isn't, throw an exception
+	        error('Invalid limit at User::getConvertedClients()!');
+	    }
+	     
+	    // Check if we should return the data or just the clients amount
+	    $select = ($data) ? 'client_id' : 'count(id)';
+	     
+	    // Get the trackers
+	    $trackers = $this->getTrackers();
+	     
+	    // Get all the unique clients for that tracker
+	    $result = $app->db->select($select)->from('`clients`')->where(
+	        '`tracker_id` IN :trackers AND
+            `state`=:state AND
+            (`created` BETWEEN DATE_SUB(NOW(), INTERVAL :days DAY) AND NOW())', array(
+                ':trackers' => array_keys($trackers),
+                ':state' => SESSION_STATE_CONVERTED,
+                ':days' => $days,
+            ))->limit($limit)->execute();
+	
         // Success! Return the clients information
         return $result;
 	}

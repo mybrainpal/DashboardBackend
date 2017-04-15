@@ -14,7 +14,7 @@ class ActionsUser extends Actions {
         'basicinfo' => true,
         'additionalinfo' => true,
         'getclientsamount' => true,
-        'adduser' => true,
+        'getconvertedclientsamount' => true,
     );
     
     /**
@@ -145,6 +145,38 @@ class ActionsUser extends Actions {
 	
 	    // Get the amount of unique clients for that user
 	    $clients = $this->app->user->getClients(false, $days, DB_MAX_LIMIT);
+	
+	    // If we've reached here, everything is OK. Return the clients amount
+	    $this->app->output->setArguments(array(
+	        FLAG_SUCCESS => true,
+	        ':total_clients' => $clients[0][0],
+	    ));
+	}
+	
+	/**
+	 * Retrieves the amount of clients this specific user handled.
+	 */
+	public function getConvertedClientsAmount() {
+	    /* Retrieve information from the request */
+	    $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
+	    $error = array(); // A temporary placeholder for any errors that might occur
+	
+	    /* Validate the input */
+	    // The days parameter defaults to our days constant
+	    $days = !empty($days) ? $days : DEFAULT_QUERY_DAYS;
+	
+	    // Make sure the client is not already registered
+	    if( $days <= 0) {
+	        $error[] = 'The amount of days has to be larger than 0!';
+	    }
+	
+	    // If there has been an error, send it and terminate the script
+	    if( !empty($error) ) {
+	        error($error);
+	    }
+	
+	    // Get the amount of unique clients for that user
+	    $clients = $this->app->user->getConvertedClients(false, $days, DB_MAX_LIMIT);
 	
 	    // If we've reached here, everything is OK. Return the clients amount
 	    $this->app->output->setArguments(array(
