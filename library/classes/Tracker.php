@@ -86,7 +86,7 @@ class Tracker {
 		        ':id' => $tracker_id
 		    ))->execute();
 		
-		// If a user has returned from the database
+		// If the tracker was found in the DB
 		if( count($result) === 1 ) {
 			// Use it
 			$tracker = $result[0];
