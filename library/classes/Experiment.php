@@ -9,174 +9,71 @@
  * 
  * @author Nati
  */
-class Experiment {
-	
-	/**
-	 * The experiment ID.
-	 * 
-	 * @var int
-	 */
-	private $id;
-	
+class Experiment extends Queryable {
+    
+    /**
+     * @see Queryable::$table
+     */
+    protected $table = '`experiments`';
+    
+    /**
+     * @see Queryable::$update_fields
+     */
+    protected $update_fields = array('tracker_id', 'groups', 'code');
+    
 	/**
 	 * The experiment tracker's ID.
 	 *
 	 * @var int
 	 */
-	private $tracker_id;
+	protected $tracker_id;
 	
 	/**
 	 * The number of groups this experiment has.
 	 * 
 	 * @var string
 	 */
-	private $groups;
+	protected $groups;
 	
 	/**
 	 * The JavaScript code for this experiment.
-	 * @TODO We are not inserting/using the JS right now.
+	 * @TODO We are not inserting/using this JS code right now.
 	 *
 	 * @var string
 	 */
-	private $code;
+	protected $code;
+	
+	/**
+	 * Returns the clients information for the loaded tracker.
+	 *
+	 * @param bool $data Optional. Should the function return the clients data or just their amount?
+	 * @param int $days Optional. The amount of days to query. Defaults to DEFAULT_QUERY_DAYS.
+	 * @param int $limit Optional. The query limit. Defaults to DEFAULT_QUERY_LIMIT.
+	 * @return array A two dimensional array containing the clients and their information.
+	 */
+	public function getClients($data = true, $days = DEFAULT_QUERY_DAYS, $limit = DEFAULT_QUERY_LIMIT) {
+	    global $app;
+	     
+	    // Make sure that the current instance can support querying,
+	    // and validate the user input
+	    $this->validateQueryInput($days, $limit);
+	     
+	    // Check if we should return the data or just the clients amount
+	    $select = ($data) ? 'DISTINCT client_id' : 'count(DISTINCT client_id)';
+	     
+	    // Get all the unique clients for that tracker
+	    $result = $app->db->select_distinct($select . ', DATE(created)')->from('`events`')->where(
+	        '`tracker_id`=:tracker_id AND
+            (`created` BETWEEN DATE_SUB(SUBDATE(CURDATE(),1), INTERVAL :days DAY) AND CURDATE())', array(
+                ':tracker_id' => $this->id,
+                ':days' => $days,
+        ))->group_by('DATE(created)')->limit($limit)->execute();
 
-    /**
-	 * Initialize the default properties for the experiment.
-	 * 
-	 * @param int $experiment_id Optional - The experiment ID to load.
-	 * @param bool $init Optional - Should the class load the information of the specified experiment?
-	 */
-	public function __construct($experiment_id = 0, $init = true) {
-		// Set the tracker ID
-		$this->id = intval($experiment_id);
-		
-		// If we should load the tracker information from the DB
-		if( $this->id && $init ) {
-    		// Load it
-    		$this->loadExperiment();
-		}
-	}
-	
-	/**
-	 * Loads an experiment into the object's instance.
-	 * In case no experiment ID is entered, the function takes the experiment ID from the ID property instead.
-	 * 
-	 * @param int $experiment_id Optional. The experiment ID to load.
-	 */
-	public function loadExperiment($experiment_id = 0) {
-		global $app;
-        
-		// If no username is provided, attempt to get one from the session
-		if( empty($experiment_id) && !empty( $this->id ) ) {
-			// There's a user logged in, use it
-			$experiment_id = $this->id;
-		}
-		
-		// Make sure the tracker ID is an integer
-		$experiment_id = intval($experiment_id);
-		
-		// Make sure the tracker ID is a valid number
-		if($experiment_id <= 0) {
-		    // It isn't, throw an exception
-		    error('Invalid experiment ID at Experiment::loadExperiment()!');
-		}
-		
-		// Now that we have a valid tracker ID, we can grab its info from the DB
-		$result = $app->db->select('*')->from('`experiments`')->where(
-		    '`id` = :id', array(
-		        ':id' => $experiment_id
-		    ))->execute();
-		
-		// If the experiment was found in the DB
-		if( count($result) === 1 ) {
-			// Use it
-			$experiment = $result[0];
+        // Organize the query result
+        $result = $this->organizeResult($result);
 
-			// Set the tracker ID
-			$this->id = intval($experiment['id']);
-
-			// The ID of this experiment tracker
-			$this->tracker_id = intval($experiment['tracker_id']);
-			
-			// The number of groups this experiment has
-			$this->groups = intval($experiment['groups']);
-			
-			// The experiment JS code
-			$this->url = $experiment['code'];
-		// Otherwise raise an error
-		} else {
-			error('Experiment does not exists at Experiment::loadExperiment()!');
-		}
-	}
-	
-	/**
-	 * Get the experiment ID.
-	 * 
-	 * @return int The experiment ID.
-	 */
-	public function getId()
-	{
-	    return $this->id;
-	}
-	
-	/**
-	 * Get the experiment's tracker ID.
-	 * 
-	 * @return int The tracker ID.
-	 */
-	public function getTrackerId()
-	{
-	    return $this->tracker_id;
-	}
-	
-	/**
-	 * Get the number of groups this experiment has.
-	 * 
-	 * @return int The number of groups.
-	 */
-	public function getGroups()
-	{
-	    return $this->groups;
-	}
-	
-	/**
-	 * Get the experiment JavaScript code.
-	 * 
-	 * @return string The experiment's JavaScript code.
-	 */
-	public function getCode()
-	{
-	    return $this->code;
-	}
-	
-	/**
-	 * Set the experiment's tracker ID.
-	 * 
-	 * @param int The tracker ID.
-	 */
-	public function setTrackerId($tracker_id)
-	{
-	    $this->tracker_id = $tracker_id;
-	}
-	
-	/**
-	 * Set the number of groups this experiment has.
-	 * 
-	 * @param int The number of groups.
-	 */
-	public function setGroups($groups_amount)
-	{
-	    $this->groups = $groups_amount;
-	}
-	
-	/**
-	 * Set the experiment JavaScript code.
-	 * 
-	 * @param string The experiment's JS code.
-	 */
-	public function setCode($code)
-	{
-	    $this->code = $code;
+        // Success! Return the clients information
+        return $result;
 	}
 }
 

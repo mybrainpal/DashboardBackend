@@ -68,12 +68,12 @@ class ActionsCustomer extends Actions {
 				}
 				else {
 					// It doesn't, inform the user
-					error('Passwords Doesn\'t match at Customer::basicInfo()');
+					error('Passwords Doesn\'t match');
 				}					
 			}
 			else {
 				// He hasn't, terminate with an error
-				error('Wrong password! at Customer::basicInfo()');
+				error('Wrong password!');
 			}
 		}
 		else {
@@ -116,7 +116,6 @@ class ActionsCustomer extends Actions {
 	public function getClientsAmount() {
 	    /* Retrieve information from the request */
 	    $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
-	    $error = array(); // A temporary placeholder for any errors that might occur
 	
 	    /* Validate the input */
 	    // The days parameter defaults to our days constant
@@ -124,21 +123,16 @@ class ActionsCustomer extends Actions {
 	
 	    // Make sure the client is not already registered
 	    if( $days <= 0) {
-	        $error[] = 'The amount of days has to be larger than 0!';
-	    }
-	
-	    // If there has been an error, send it and terminate the script
-	    if( !empty($error) ) {
-	        error($error);
+	        error('The amount of days has to be larger than 0!');
 	    }
 	
 	    // Get the amount of unique clients for that customer
 	    $clients = $this->app->user->getClients(false, $days, DB_MAX_LIMIT);
-	
+
 	    // If we've reached here, everything is OK. Return the clients amount
 	    $this->app->output->setArguments(array(
 	        FLAG_SUCCESS => true,
-	        ':total_clients' => $clients[0][0],
+	        ':total_clients' => $clients,
 	    ));
 	}
 	
@@ -148,7 +142,6 @@ class ActionsCustomer extends Actions {
 	public function getConvertedClientsAmount() {
 	    /* Retrieve information from the request */
 	    $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
-	    $error = array(); // A temporary placeholder for any errors that might occur
 	
 	    /* Validate the input */
 	    // The days parameter defaults to our days constant
@@ -156,12 +149,7 @@ class ActionsCustomer extends Actions {
 	
 	    // Make sure the client is not already registered
 	    if( $days <= 0) {
-	        $error[] = 'The amount of days has to be larger than 0!';
-	    }
-	
-	    // If there has been an error, send it and terminate the script
-	    if( !empty($error) ) {
-	        error($error);
+	        error('The amount of days has to be larger than 0!');
 	    }
 	
 	    // Get the amount of unique clients for that customer

@@ -9,105 +9,38 @@
  * 
  * @author Nati
  */
-class Tracker {
-	
-	/**
-	 * The tracker ID.
-	 * 
-	 * @var int
-	 */
-	private $id;
-	
+class Tracker extends Queryable {
+    
+    /**
+     * @see Queryable::$table
+     */
+    protected $table = '`trackers`';
+    
+    /**
+     * @see Queryable::$update_fields
+     */
+    protected $update_fields = array('owner_id', 'name', 'url');
+    
 	/**
 	 * The user ID of the tracker owner.
 	 *
 	 * @var int
 	 */
-	private $owner;
+	protected $owner_id;
 	
 	/**
 	 * The name of the tracker.
 	 * 
 	 * @var string
 	 */
-	private $name;
+	protected $name;
 	
 	/**
 	 * The url of the tracker.
 	 *
 	 * @var string
 	 */
-	private $url;
-
-    /**
-	 * Initialize the default properties for the tracker.
-	 * 
-	 * @param int $tracker_id Optional - The tracker ID to load.
-	 * @param bool $init Optional - Should the class load the information of the specified tracker?
-	 */
-	public function __construct($tracker_id = 0, $init = true) {
-		// Set the tracker ID
-		$this->id = intval($tracker_id);
-		
-		// If we should load the tracker information from the DB
-		if( $this->id && $init ) {
-    		// Load it
-    		$this->loadTracker();
-		}
-	}
-	
-	/**
-	 * Load a tracker into the object.
-	 * In case no tracker ID is entered, the function takes the tracker ID from the ID property instead.
-	 * 
-	 * @param int $tracker_id Optional. The tracker ID to load.
-	 */
-	public function loadTracker($tracker_id = 0) {
-		global $app;
-        
-		// If no username is provided, attempt to get one from the session
-		if( empty($tracker_id) && !empty( $this->id ) ) {
-			// There's a user logged in, use it
-			$tracker_id = $this->id;
-		}
-		
-		// Make sure the tracker ID is an integer
-		$tracker_id = intval($tracker_id);
-		
-		// Make sure the tracker ID is a valid number
-		if($tracker_id <= 0) {
-		    // It isn't, throw an exception
-		    error('Invalid tracker ID at Tracker::loadTracker()!');
-		}
-		
-		// Now that we have a valid tracker ID, we can grab its info from the DB
-		$result = $app->db->select('*')->from('`trackers`')->where(
-		    '`id` = :id', array(
-		        ':id' => $tracker_id
-		    ))->execute();
-		
-		// If the tracker was found in the DB
-		if( count($result) === 1 ) {
-			// Use it
-			$tracker = $result[0];
-
-			// Set the tracker ID
-			$this->id = intval($tracker['id']);
-
-			// The user ID of the tracker owner
-			$this->owner = intval($tracker['user_id']);
-			
-			// The tracker name
-			$this->name = $tracker['name'];
-			
-			// The tracker URL
-			$this->url = $tracker['url'];
-		}
-		// Otherwise raise an error
-		else {
-			error('Tracker does not exists at Tracker::loadTracker()!');
-		}
-	}
+	protected $url;
 	
 	/**
 	 * Returns the clients information for the loaded tracker.
@@ -120,30 +53,24 @@ class Tracker {
 	public function getClients($data = true, $days = DEFAULT_QUERY_DAYS, $limit = DEFAULT_QUERY_LIMIT) {
 	    global $app;
 	    
-	    // Make sure the tracker ID is a valid number
-	    if($this->id <= 0) {
-	        // It isn't, throw an exception
-	        error('Invalid tracker ID at Tracker::getClients()!');
-	    }
-	    
-	    // Make sure $limit is a valid query limit
-	    $limit = intval($limit);
-	    if($limit <= 0) {
-	        // It isn't, throw an exception
-	        error('Invalid limit at Tracker::getClients()!');
-	    }
+	    // Make sure that the current instance can support querying,
+	    // and validate the user input
+	    $this->validateQueryInput($days, $limit);
 	    
 	    // Check if we should return the data or just the clients amount
 	    $select = ($data) ? '*' : 'count(id)';
 	    
 	    // Get all the unique clients for that tracker
-	    $result = $app->db->select($select)->from('`clients`')->where(
+	    $result = $app->db->select($select . ', DATE(created)')->from('`clients`')->where(
 	        '`tracker_id`=:tracker_id AND
-            (`created` BETWEEN DATE_SUB(NOW(), INTERVAL :days DAY) AND NOW())', array(
+            (`created` BETWEEN DATE_SUB(SUBDATE(CURDATE(),1), INTERVAL :days DAY) AND CURDATE())', array(
                 ':tracker_id' => $this->id,
                 ':days' => $days,
-	    ))->limit($limit)->execute();
-        
+	    ))->group_by('DATE(created)')->limit($limit)->execute();
+
+	    // Organize the query result
+	    $result = $this->organizeResult($result);
+	    
         // Success! Return the clients information
         return $result;
 	}
@@ -159,104 +86,28 @@ class Tracker {
 	public function getConvertedClients($data = true, $days = DEFAULT_QUERY_DAYS, $limit = DEFAULT_QUERY_LIMIT) {
 	    global $app;
 	     
-	    // Make sure the tracker ID is a valid number
-	    if($this->id <= 0) {
-	        // It isn't, throw an exception
-	        error('Invalid tracker ID at Tracker::getClients()!');
-	    }
-	     
-	    // Make sure $limit is a valid query limit
-	    $limit = intval($limit);
-	    if($limit <= 0) {
-	        // It isn't, throw an exception
-	        error('Invalid limit at Tracker::getClients()!');
-	    }
+	    // Make sure that the current instance can support querying,
+	    // and validate the user input
+	    $this->validateQueryInput($days, $limit);
 	     
 	    // Check if we should return the data or just the clients amount
-	    $select = ($data) ? 'client_id' : 'count(client_id)';
-	     
+	    $select = ($data) ? 'DISTINCT client_id' : 'count(DISTINCT client_id)';
+	    
 	    // Get all the unique clients for that tracker
-	    $result = $app->db->select("DISTINCT $select")->from('`sessions`')->where(
+	    $result = $app->db->select($select . ', DATE(created)')->from('`sessions`')->where(
 	        '`tracker_id`=:tracker_id AND
 	        `state`=:state AND
-            (`created` BETWEEN DATE_SUB(NOW(), INTERVAL :days DAY) AND NOW())', array(
+            (`created` BETWEEN DATE_SUB(SUBDATE(CURDATE(),1), INTERVAL :days DAY) AND CURDATE())', array(
                 ':tracker_id' => $this->id,
                 ':state' => SESSION_STATE_CONVERTED,
                 ':days' => $days,
-        ))->limit($limit)->execute();
+        ))->group_by('DATE(created)')->limit($limit)->execute();
+            
+        // Organize the query result
+        $result = $this->organizeResult($result);
 	
         // Success! Return the clients information
         return $result;
-	}
-	
-	/**
-	 * Get the tracker ID.
-	 * 
-	 * @return int The tracker ID.
-	 */
-	public function getId()
-	{
-	    return $this->id;
-	}
-	
-	/**
-	 * Get the tracker owner.
-	 * 
-	 * @return int The user ID of the tracker.
-	 */
-	public function getOwner()
-	{
-	    return $this->owner;
-	}
-	
-	/**
-	 * Get the tracker name.
-	 * 
-	 * @return string The tracker name.
-	 */
-	public function getName()
-	{
-	    return $this->name;
-	}
-	
-	/**
-	 * Get the tracker url.
-	 * 
-	 * @return string The tracker's URL.
-	 */
-	public function getUrl()
-	{
-	    return $this->url;
-	}
-	
-	/**
-	 * Set the tracker owner.
-	 * 
-	 * @param int The user ID of tracker owner.
-	 */
-	public function setOwner($owner)
-	{
-	    $this->owner = $owner;
-	}
-	
-	/**
-	 * Set the tracker name.
-	 * 
-	 * @param string The tracker name.
-	 */
-	public function setName($name)
-	{
-	    $this->name = $name;
-	}
-	
-	/**
-	 * Set the tracker url.
-	 * 
-	 * @param string The tracker's URL.
-	 */
-	public function setUrl($url)
-	{
-	    $this->url = $url;
 	}
 }
 

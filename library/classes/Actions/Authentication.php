@@ -36,26 +36,26 @@ class ActionsAuthentication extends Actions {
 					// We do, send it to the user class for validation
 					if( $this->app->user->login($username, $password) ) {
 						// Logged in successfully! Set the user in the session
-						$this->app->input('session', 'username', $username);
+						$this->app->input('session', 'user_id', $this->app->user->id);
 							
 						// Return that the login process succeeded
 						$this->app->output->setArguments(array(FLAG_SUCCESS => true));
 					}
 					else {
 						// Login failed! Return with an error
-						error('Invalid credentials at Authentication::login()');
+						error('Invalid credentials');
 					}
 				}
 				else {
 					// The username or password are an empty string
-					error('Username or password are empty at Authentication::login()');
+					error('Username or password are empty');
 				}
 				
 				
 			}
 			else {
 				// He isn't! Report the error
-				error('No data received at Authentication::login()');
+				error('No data received');
 			}
 		}
 	}

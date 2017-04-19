@@ -8,7 +8,8 @@
 class ActionsAdministration extends Actions {
     
     protected $actions = array(
-        'adduser' => true,
+        'addcustomer' => true,
+        'deletecustomer' => true,
         'getclientsamount' => true,
         'getconvertedclientsamount' => true,
     );
@@ -24,33 +25,67 @@ class ActionsAdministration extends Actions {
         parent::__construct($app_object);
         
         // Make sure the current user is the administrator
-        if($this->app->user->id !== 1) {
+        if( !$this->app->user->isSuperUser() ) {
             // It isn't, throw an exception
             error('This controller is only accessible by an administrator!');
         }
 	}
     
 	/**
-	 * Display the user creation form page for administrators,
-	 * or create a new user if the registration form has been submitted.
+	 * Adds a new customer to the database.
 	 */
-	public function addUser() {
+	public function addCustomer() {
 	    // Check if the registration form has been submitted
 	    if( !empty($this->app->input('post')) ) {
 	        // Process the registration input
 	        $username = $this->app->input('post', 'username'); // Get the username
 	        $password = $this->app->input('post', 'password'); // Get the password
+	        
+	        // Generate a new empty customer instance
+	        $new_customer = new Customer(0);
+	        
+	        // Set its properties
+	        $new_customer->username = $username;
+	        $new_customer->password = $password;
+	        
+	        // Create the new customer
+	        $new_customer->create();
 	        	
-	        // Create the new user and get the email validation token
-	        $this->app->user->create($username, $password);
-	        	
-	        // Return that the registration process succeeded
-	        $this->app->output->setArguments(array(FLAG_SUCCESS => true));
-	        	
+	        // Return that the registration process succeeded along with the new customer ID
+	        $this->app->output->setArguments(array(
+	            FLAG_SUCCESS => true,
+	            ':id' => $new_customer->id
+	        ));
 	    }
 	    else {
 	        // He isn't! Report the error
-			error('No data received at Administration::addUser()');
+			error('No data received');
+	    }
+	}
+	
+	/**
+	 * Delete the request user.
+	 */
+	public function deleteCustomer() {
+	    // Check if the registration form has been submitted
+	    if( !empty($this->app->input('post')) ) {
+	        // Process the registration input
+	        $customer_id = intval($this->app->input('post', 'customer_id')); // Get the customer ID
+	         
+	        // Create a new customer instance
+	        $customer = new Customer($customer_id);
+	         
+	        // Delete the customer from the DB
+	        $customer->delete();
+	
+	        // Return that the registration process succeeded
+	        $this->app->output->setArguments(array(
+	            FLAG_SUCCESS => true
+	        ));
+	    }
+	    else {
+	        // He isn't! Report the error
+	        error('No data received');
 	    }
 	}
 	
@@ -60,7 +95,6 @@ class ActionsAdministration extends Actions {
 	public function getClientsAmount() {
 	    /* Retrieve information from the request */
 	    $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
-	    $error = array(); // A temporary placeholder for any errors that might occur
 	
 	    /* Validate the input */
 	    // The days parameter defaults to our days constant
@@ -68,17 +102,12 @@ class ActionsAdministration extends Actions {
 	
 	    // Make sure the client is not already registered
 	    if( $days <= 0) {
-	        $error[] = 'The amount of days has to be larger than 0!';
-	    }
-	
-	    // If there has been an error, send it and terminate the script
-	    if( !empty($error) ) {
-	        error($error);
+	        error('The amount of days has to be larger than 0!');
 	    }
 	    
 	    // Get all the unique clients for that tracker
 	    $result = $this->app->db->select('count(id)')->from('`clients`')->where(
-            '(`created` BETWEEN DATE_SUB(NOW(), INTERVAL :days DAY) AND NOW())', array(
+            '(`created` BETWEEN DATE_SUB(SUBDATE(CURDATE(),1), INTERVAL :days DAY) AND CURDATE())', array(
                 ':days' => $days,
         ))->execute();
 	
@@ -95,7 +124,6 @@ class ActionsAdministration extends Actions {
 	public function getConvertedClientsAmount() {
 	    /* Retrieve information from the request */
 	    $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
-	    $error = array(); // A temporary placeholder for any errors that might occur
 	
 	    /* Validate the input */
 	    // The days parameter defaults to our days constant
@@ -103,18 +131,13 @@ class ActionsAdministration extends Actions {
 	
 	    // Make sure the client is not already registered
 	    if( $days <= 0) {
-	        $error[] = 'The amount of days has to be larger than 0!';
-	    }
-	
-	    // If there has been an error, send it and terminate the script
-	    if( !empty($error) ) {
-	        error($error);
+	        error('The amount of days has to be larger than 0!');
 	    }
 	     
 	    // Get all converted clients
 	    $result = $this->app->db->select('count(id)')->from('`clients`')->where(
             '`state`=:state AND
-            (`created` BETWEEN DATE_SUB(NOW(), INTERVAL :days DAY) AND NOW())', array(
+            (`created` BETWEEN DATE_SUB(SUBDATE(CURDATE(),1), INTERVAL :days DAY) AND CURDATE())', array(
                 ':state' => SESSION_STATE_CONVERTED,
                 ':days' => $days,
         ))->execute();

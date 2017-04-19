@@ -20,7 +20,6 @@ class ActionsTracker extends Actions{
         /* Retrieve information from the request */
         $tracker_id = intval($this->app->input('post', 'tracker_id')); // The amount of days to retrieve
         $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
-        $error = array(); // A temporary placeholder for any errors that might occur
 
         /* Validate the input */
         // The days parameter defaults to our days constant
@@ -28,25 +27,21 @@ class ActionsTracker extends Actions{
         
         // Make sure the tracker is not empty
         if( empty($tracker_id) ) {
-            $error[] = 'Invalid tracker ID.';
+            error('Invalid tracker ID.');
         }
         
         // Days can't be a negative number
         if( $days <= 0) {
-            $error[] = 'The amount of days has to be larger than 0!';
+            error('The amount of days has to be larger than 0!');
         }
         
         // Create a new Tracker
         $tracker = new Tracker($tracker_id);
         
         // Make sure the current user is the owner of the tracker
-        if( $tracker->getOwner() !== $this->app->user->id ) {
-            $error[] = 'You do not have permissions to view this tracker!';
-        }
-        
-        // If there has been an error, send it and terminate the script
-        if( !empty($error) ) {
-            error($error);
+        if( $tracker->owner_id !== $this->app->user->id 
+            && !$this->app->user->isSuperUser() ) {
+            error('You do not have permissions to view this tracker!');
         }
         
         // Get the amount of unique clients for that tracker
@@ -55,7 +50,7 @@ class ActionsTracker extends Actions{
         // If we've reached here, everything is OK. Return the clients amount
         $this->app->output->setArguments(array(
             FLAG_SUCCESS => true,
-            ':total_clients' => $clients[0][0],
+            ':total_clients' => $clients,
         ));
     }
     
@@ -66,7 +61,6 @@ class ActionsTracker extends Actions{
         /* Retrieve information from the request */
         $tracker_id = intval($this->app->input('post', 'tracker_id')); // The amount of days to retrieve
         $days = intval($this->app->input('post', 'days')); // The amount of days to retrieve
-        $error = array(); // A temporary placeholder for any errors that might occur
     
         /* Validate the input */
         // The days parameter defaults to our days constant
@@ -74,25 +68,22 @@ class ActionsTracker extends Actions{
     
         // Make sure the tracker is not empty
         if( empty($tracker_id) ) {
-            $error[] = 'Invalid tracker ID.';
+            error('Invalid tracker ID.');
         }
     
         // Days can't be a negative number
         if( $days <= 0) {
-            $error[] = 'The amount of days has to be larger than 0!';
+            error('The amount of days has to be larger than 0!');
         }
     
         // Create a new Tracker
         $tracker = new Tracker($tracker_id);
-    
+        
         // Make sure the current user is the owner of the tracker
-        if( $tracker->getOwner() !== $this->app->user->id ) {
-            $error[] = 'You do not have permissions to view this tracker!';
-        }
-    
-        // If there has been an error, send it and terminate the script
-        if( !empty($error) ) {
-            error($error);
+        // or the system administrator
+        if( $tracker->getOwner() !== $this->app->user->id
+            && !$this->app->user->isSuperUser() ) {
+            error('You do not have permissions to view this tracker!');
         }
     
         // Get the amount of unique clients for that tracker
@@ -101,7 +92,7 @@ class ActionsTracker extends Actions{
         // If we've reached here, everything is OK. Return the clients amount
         $this->app->output->setArguments(array(
             FLAG_SUCCESS => true,
-            ':total_clients' => $clients[0][0],
+            ':total_clients' => $clients,
         ));
     }
 }

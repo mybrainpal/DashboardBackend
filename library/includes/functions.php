@@ -13,6 +13,13 @@
 function error($message, $log = true, $display = true) {
 	global $app;
 	
+	/* Add the error location to the error message */
+	// Get the debug back trace (without the object itself or the function arguments)
+	$backtrace = debug_backtrace(2, 2)[1];
+	
+	// Add the class name and method to the error message
+	$message .= sprintf(' At %s::%s', $backtrace['class'], $backtrace['function']);
+	
 	// Log the error (If needed)
 	if($log) $app->logger->log($message, LOG_CRIT);
 	

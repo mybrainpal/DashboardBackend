@@ -20,8 +20,6 @@ class ActionsClient extends Actions{
      * If this client needs a new session, this function will generate one for it.
      */
     public function init() {
-        $error = array(); // A temporary placeholder for any errors that might occur
-        
         // Check if this is a new client for this domain
         if( empty($this->app->input('session', 'client_id'))) {
             // This is a brand new client, we need to initialize the it
@@ -86,30 +84,24 @@ class ActionsClient extends Actions{
         /* Retrieve information from the request */
         $tracker_id = intval($this->app->input('post', 'tracker_id')); // The tracker ID
         $device_type = intval($this->app->input('post', 'client.agent.mobile')); // The client's device type
-        $created = $this->app->input('post', 'timestamp'); // Exact timestamp of when the client creation occurred
-        $error = array(); // A temporary placeholder for any errors that might occur
+        $created = $this->app->input('post', 'timestamp'); // Exact time stamp of when the client creation occurred
         
         /* Validate the input */
         // Make sure the client is not already registered
         if( !empty($this->app->input('session', 'client_id'))) {
-            $error[] = 'The client is already stored in the database!';
+            error('The client is already stored in the database!');
         }
             
         // Validate the user agent
         if( empty($tracker_id) ) {
             // The timestamp is not valid
-            $error[] = 'Tracker ID is missing!';
+            error('Tracker ID is missing!');
         }
         
         // Validate the timestamp
         if( !is_numeric($created) ) {
             // The timestamp is not valid
-            $error[] = '`timestamp` has to be a valid UNIX timestamp!';
-        }
-        
-        // If there has been an error, send it and terminate the script
-        if( !empty($error) ) {
-            error($error);
+            error('`timestamp` has to be a valid UNIX timestamp!');
         }
         
         /* If we've reached here, the input is valid */
@@ -152,27 +144,20 @@ class ActionsClient extends Actions{
             'availWidth' => intval($this->app->input('post', 'client.screen.availWidth')),
         );
     
-        $error = array(); // A temporary placeholder for any errors that might occur
-    
         /* Validate the input */
         // The state can be an empty string
         $state = $state ? $state : '';
         
         // Validate the user agent
         if( empty($useragent) ) {
-            // The timestamp is not valid
-            $error[] = '`useragent` cannot be empty!';
+            // The time stamp is not valid
+            error('`useragent` cannot be empty!');
         }
     
         // Validate the timestamp
         if( !is_numeric($created) ) {
             // The timestamp is not valid
-            $error[] = '`timestamp` has to be a valid UNIX timestamp!';
-        }
-    
-        // If there has been an error, send it and terminate the script
-        if( !empty($error) ) {
-            error($error);
+            error('`timestamp` has to be a valid UNIX timestamp!');
         }
     
         /* If we've reached here, the input is valid */

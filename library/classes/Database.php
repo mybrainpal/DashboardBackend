@@ -48,6 +48,10 @@ class Database {
     			die('DB connection Error (' . $e->getMessage() . ')');
 	        }
 		}
+		
+		/* Initialize SQL modes */
+		// Remove ONLY_FULL_GROUP_BY
+		$this->dbh->query("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
 	}
 	
 	/**
@@ -134,7 +138,7 @@ class Database {
 				
 				// Otherwise, raise an error
 				else {
-					error('Can\'t append the object requested into the query at Database::quote()' .
+					error('Can\'t append the object requested into the query' .
 					    'As it has not __toString() method!');
 				}
 				
@@ -144,7 +148,7 @@ class Database {
 				
 			// We're not supporting this type! Raise an error!
 			default:
-				error("Unsupported variable type '$value' at Database::quote()!");
+				error("Unsupported variable type '$value'");
 				
 		}
 	}
@@ -157,7 +161,7 @@ class Database {
 	 */
 	public function execute($raw_result = false) {
 		// Execute the query and get the result
-		$result = $this->dbh->query($this->query);
+		$result = $this->dbh->query($this->query, PDO::FETCH_ASSOC);
 
 		// Check for errors
 		if( $result === false ) {

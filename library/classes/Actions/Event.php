@@ -26,32 +26,26 @@ class ActionsEvent extends Actions{
 		$selector = $this->app->input('post', 'selector') | ''; // The object the event occurred on
 		$timestamp = $this->app->input('post', 'timestamp'); // Exact timestamp of when the event occurred
 		$metadata = array(); // Other meta data we'd like to store
-		$error = array(); // A temporary placeholder for any errors that might occur
 		
 		/* Validate the input */
 		// Validate the timestamp
 		if( !is_numeric($timestamp) ) {
 		    // The timestamp is not valid
-		    $error[] = '`timestamp` has to be a valid UNIX timestamp!';
+		    error('`timestamp` has to be a valid UNIX timestamp!');
 		}
 		
 		// Make sure the log message is not empty
 		if( empty($event) ) {
 		    // It is empty, inform the developer
-		    $error[] = 'The event type cannot be empty!';
-		}
-		
-		// If there has been an error, send it and terminate the script
-		if( !empty($error) ) {
-		    error($error);
+		    error('The event type cannot be empty!');
 		}
 		
 		/* If we've reached here, the input is valid */
 		// Store the event in the DB
 		$this->app->db->insert_into('`events`')->_('(`client_id`, `session_id`, `tracker_id`,
-		    `view_id`, `experiment_id`, `experiment_group_id`, `event`, `selector`, `metadata`, `timestamp`)')
+		    `view_id`, `experiment_id`, `experiment_group_id`, `event`, `selector`, `metadata`, `created`)')
 		->values('(:client_id, :session_id, :tracker_id, :view_id, :experiment_id, :experiment_group_id,
-		    :event, :selector, :metadata, :timestamp)', array(
+		    :event, :selector, :metadata, :created)', array(
                 ':client_id' => $client_id,
                 ':session_id' => $session_id,
 		        ':tracker_id' => $tracker_id,
@@ -61,7 +55,7 @@ class ActionsEvent extends Actions{
 		        ':event' => $event,
 		        ':selector' => $selector,
 		        ':metadata' => json_encode($metadata),
-                ':timestamp' => mysql_date($timestamp),
+                ':created' => mysql_date($timestamp),
 		))->execute();
 		
 		// If we've passed the last query we can safely assume that we have an ID to use, so get it

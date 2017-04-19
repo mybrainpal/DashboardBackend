@@ -33,36 +33,30 @@ class ActionsLog extends Actions{
 	    $client_id = intval($this->app->input('session', 'client_id')); // The client ID
 		$message = $this->app->input('post', 'message'); // The log message
 		$level = $this->app->input('post', 'level'); // The message level (error, warning, info, etc.)
-		$timestamp = $this->app->input('post', 'timestamp'); // Exact timestamp of when the event occurred
-		$error = array(); // A temporary placeholder for any errors that might occur
+		$timestamp = $this->app->input('post', 'timestamp'); // Exact time stamp of when the event occurred
 		
 		/* Validate the input */
 		// Validate the message level
 		if( !isset($this->log_types[$level]) ) {
 		    /* The server could not identify the message level */
 		    // Parse the error message
-		    $error[0] = 'Could not identify the message level. Available levels are: ';
-		    $error[0] .= implode(', ', $this->log_types);
+		    $error = 'Could not identify the message level. Available levels are: ';
+		    $error .= implode(', ', $this->log_types);
 		    
 		    // Remove the last comma and add a line break
-		    $error[0] .= substr($error, 0, -2);
+		    error(substr($error, 0, -2));
 		}
 
-		// Validate the timestamp
+		// Validate the time stamp
 		if( !is_numeric($timestamp) ) {
-		    // The timestamp is not valid
-		    $error[] = '`timestamp` has to be a valid UNIX timestamp!';
+		    // The time stamp is not valid
+		    error('`timestamp` has to be a valid UNIX timestamp!');
 		}
 		
 		// Make sure the log message is not empty
 		if( empty($message) ) {
 		    // It is empty, inform the developer
-		    $error[] = 'The log message cannot be empty!';
-		}
-		
-		// If there has been an error, send it and terminate the script
-		if( !empty($error) ) {
-		    error($error);
+		    error('The log message cannot be empty!');
 		}
 		
 		/* If we've reached here, the input is valid */

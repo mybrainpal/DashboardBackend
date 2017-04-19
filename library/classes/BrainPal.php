@@ -114,8 +114,8 @@ class BrainPal {
 	 * and execute the function `method`.
 	 */
 	public function initialize() {
-		// Initialize the user instance
-		$this->user = new User();
+		// Initialize the customer instance
+		$this->user = new Customer();
 		
 		// Add default template arguments
 		$this->output->setArguments(array(
