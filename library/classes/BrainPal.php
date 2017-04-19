@@ -337,7 +337,7 @@ class BrainPal {
 		$raw_value = !empty($raw_value) ? $raw_value : false;
 
 		// Check if we need to set the parameter value
-		if( !empty($raw_value) && (is_string($raw_value) || is_array($raw_value)) ) {
+		if( !empty($raw_value) && (is_string($raw_value) || is_array($raw_value) || is_int($raw_value)) ) {
 			// We do, so just set its value
 			$this->input->{$type}[$name] = $raw_value;
 		} elseif( !is_bool($raw_value) ) {

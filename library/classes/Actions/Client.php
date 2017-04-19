@@ -84,7 +84,7 @@ class ActionsClient extends Actions{
      */
     private function addClient() {
         /* Retrieve information from the request */
-        $tracker_id = intval($this->app->input('post', 'tracker')); // The tracker ID
+        $tracker_id = intval($this->app->input('post', 'tracker_id')); // The tracker ID
         $device_type = intval($this->app->input('post', 'client.agent.mobile')); // The client's device type
         $created = $this->app->input('post', 'timestamp'); // Exact timestamp of when the client creation occurred
         $error = array(); // A temporary placeholder for any errors that might occur
@@ -178,7 +178,7 @@ class ActionsClient extends Actions{
         /* If we've reached here, the input is valid */
         // Store the log message in the DB
         $this->app->db->insert_into('`sessions`')
-        ->_('(`client_id`, `tracker_id`, useragent`, `state`, `manipulated`, metadata`, `created`)')
+        ->_('(`client_id`, `tracker_id`, `useragent`, `state`, `manipulated`, `metadata`, `created`)')
         ->values('(:client_id, :tracker_id, :useragent, :state, :manipulated, :metadata, :created)', array(
             ':client_id' => $client_id,
             ':tracker_id' => $tracker_id,
