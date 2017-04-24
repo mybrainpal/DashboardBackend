@@ -19,7 +19,7 @@ class Experiment extends Queryable {
     /**
      * @see Queryable::$update_fields
      */
-    protected $update_fields = array('tracker_id', 'groups', 'code');
+    protected $update_fields = array('tracker_id', 'owner_id', 'groups', 'code');
     
 	/**
 	 * The experiment tracker's ID.
@@ -27,6 +27,13 @@ class Experiment extends Queryable {
 	 * @var int
 	 */
 	protected $tracker_id;
+	
+	/**
+	 * The experiment owner ID (the owner customer ID).
+	 *
+	 * @var int
+	 */
+	protected $owner_id;
 	
 	/**
 	 * The number of groups this experiment has.
@@ -62,10 +69,12 @@ class Experiment extends Queryable {
 	    $select = ($data) ? 'DISTINCT client_id' : 'count(DISTINCT client_id)';
 	     
 	    // Get all the unique clients for that tracker
-	    $result = $app->db->select_distinct($select . ', DATE(created)')->from('`events`')->where(
+	    $result = $app->db->select($select . ', DATE(created)')->from('`events`')->where(
 	        '`tracker_id`=:tracker_id AND
+	        `experiment_id`=:experiment_id AND
             (`created` BETWEEN DATE_SUB(SUBDATE(CURDATE(),1), INTERVAL :days DAY) AND CURDATE())', array(
-                ':tracker_id' => $this->id,
+                ':experiment_id' => $this->id,
+                ':tracker_id' => $this->tracker_id,
                 ':days' => $days,
         ))->group_by('DATE(created)')->limit($limit)->execute();
 
